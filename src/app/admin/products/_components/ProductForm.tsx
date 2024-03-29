@@ -76,8 +76,8 @@ export function ProductForm({ product }: { product?: Product | null }) {
         {product != null && (
           <Image
             src={product.imagePath}
-            height="400"
-            width="400"
+            height="300"
+            width="300"
             alt="Product Image"
           />
         )}

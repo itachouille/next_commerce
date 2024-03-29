@@ -27,7 +27,7 @@ export function ActiveToggleDropdownItem({
         });
       }}
     >
-      {isAvailableForPurchase ? "Deactivate" : "Activate"}
+      {isAvailableForPurchase ? "Desactivate" : "Activate"}
     </DropdownMenuItem>
   );
 }
