@@ -13,12 +13,13 @@ export async function POST(req: NextRequest) {
     process.env.STRIPE_WEBHOOK_SECRET as string
   );
 
-  if (event.type == "charge.succeeded") {
-    const charge = event.data.object;
-    const productId = charge.metadata.producId;
-    const email = charge.billing_details.email;
-    const pricePaidInCents = charge.amount;
-    const product = await db.product.findUnique({ where: { id: productId } });
+  if (event.type === "charge.succeeded") {
+    const charge = event.data.object
+    const productId = charge.metadata.productId
+    const email = charge.billing_details.email
+    const pricePaidInCents = charge.amount
+
+    const product = await db.product.findUnique({ where: { id: productId } })
 
     if (product == null || email == null) {
       return new NextResponse("Bad Request", { status: 400 });
@@ -35,7 +36,7 @@ export async function POST(req: NextRequest) {
       where: { email },
       create: userFileds,
       update: userFileds,
-      select: { orders: { orderBy: { createAt: "desc" }, take: 1 } },
+      select: { orders: { orderBy: { createdAt: "desc" }, take: 1 } },
     });
 
     const downloadVerification = await db.downloadVerification.create({

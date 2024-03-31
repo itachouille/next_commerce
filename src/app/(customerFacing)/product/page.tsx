@@ -8,7 +8,7 @@ const getProducts = cache(() => {
     where: { isAvailableForPurchase: true },
     orderBy: { name: "asc" },
   })
-}, ["/products", "getProducts"])
+}, ["/product", "getProducts"])
 
 export default function ProductsPage() {
   return (

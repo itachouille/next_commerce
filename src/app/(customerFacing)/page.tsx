@@ -22,7 +22,7 @@ const getMostPopularProducts = cache(
 const getNewestProducts = cache(() => {
   return db.product.findMany({
     where: { isAvailableForPurchase: true },
-    orderBy: { createAt: "desc" },
+    orderBy: { createdAt: "desc" },
     take: 6,
   });
 }, ["/", "getNewestProducts"]);
