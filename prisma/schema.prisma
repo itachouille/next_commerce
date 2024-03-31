@@ -18,35 +18,36 @@ model Product {
   imagePath              String
   description            String
   isAvailableForPurchase Boolean                @default(true)
-  createAt               DateTime               @default(now())
-  updateAt               DateTime               @updatedAt
+  createdAt              DateTime               @default(now())
+  updatedAt              DateTime               @updatedAt
   orders                 Order[]
-  downloadVerification   DownloadVerification[]
+  downloadVerifications  DownloadVerification[]
 }
 
 model User {
-  id       String   @id @default(uuid())
-  email    String   @unique
-  createAt DateTime @default(now())
-  updateAt DateTime @updatedAt
-  orders   Order[]
+  id        String   @id @default(uuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  orders    Order[]
 }
 
 model Order {
-  id           String   @id @default(uuid())
-  userId       String
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  productId    String
-  product      Product  @relation(fields: [productId], references: [id], onDelete: Restrict)
+  id               String   @id @default(uuid())
   pricePaidInCents Int
-  createAt     DateTime @default(now())
-  updateAt     DateTime @updatedAt
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  userId    String
+  productId String
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product   Product @relation(fields: [productId], references: [id], onDelete: Restrict)
 }
 
 model DownloadVerification {
   id        String   @id @default(uuid())
   expiresAt DateTime
+  createdAt DateTime @default(now())
   productId String
   product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  createAt  DateTime @default(now())
 }
