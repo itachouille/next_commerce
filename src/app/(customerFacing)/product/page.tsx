@@ -7,8 +7,8 @@ const getProducts = cache(() => {
   return db.product.findMany({
     where: { isAvailableForPurchase: true },
     orderBy: { name: "asc" },
-  })
-}, ["/product", "getProducts"])
+  });
+}, ["/product", "getProducts"]);
 
 export default function ProductsPage() {
   return (
