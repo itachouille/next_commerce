@@ -19,6 +19,7 @@ export async function POST(req: NextRequest) {
     const productId = charge.metadata.productId
     const email = charge.billing_details.email
     const pricePaidInCents = charge.amount
+    const discountCodeId = charge.metadata.discountCodeId
 
     const product = await db.product.findUnique({ where: { id: productId } })
 
@@ -28,7 +29,7 @@ export async function POST(req: NextRequest) {
 
     const userFileds = {
       email,
-      orders: { create: { productId, pricePaidInCents } },
+      orders: { create: { productId, pricePaidInCents, discountCodeId } },
     };
 
     const {
@@ -46,6 +47,13 @@ export async function POST(req: NextRequest) {
         expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24),
       },
     });
+
+    if (discountCodeId != null) {
+      await db.discountCode.update({
+        where: {id: discountCodeId},
+        data: {uses: {increment: 1}}
+      })
+    }
 
     await resend.emails.send({
       from: `Support <${process.env.SENDER_EMAIL}>`,

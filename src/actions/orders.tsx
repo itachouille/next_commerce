@@ -2,11 +2,16 @@
 
 import db from "@/db/db";
 import OrderHistoryEmail from "@/email/OrderHistory";
+import {
+  getDiscountedAmount,
+  usableDiscountCodeWhere,
+} from "@/lib/discountCodeHelpers";
 import { Resend } from "resend";
+import Stripe from "stripe";
 import { z } from "zod";
 
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
 const resend = new Resend(process.env.RESEND_API_KEY as string);
-
 const emailSchema = z.string().email();
 
 export async function emailOrderHistory(
@@ -48,7 +53,7 @@ export async function emailOrderHistory(
     };
   }
 
-  const orders = user.orders.map(async order => {
+  const orders = user.orders.map(async (order) => {
     return {
       ...order,
       downloadVerificationId: (
@@ -77,4 +82,58 @@ export async function emailOrderHistory(
     message:
       "Check your email to view your order history and download your products.",
   };
+}
+
+export async function createPaymentIntent(
+  email: string,
+  productId: string,
+  discountCodeId?: string
+) {
+  const product = await db.product.findUnique({ where: { id: productId } });
+  if (product == null) return { error: "Unexpected Error" };
+
+  const discountCode =
+    discountCodeId == null
+      ? null
+      : await db.discountCode.findUnique({
+          where: { id: discountCodeId, ...usableDiscountCodeWhere(product.id) },
+        });
+
+  if (discountCode == null && discountCodeId != null) {
+    return { error: "Coupon has expired" };
+  }
+
+  const existingOrder = await db.order.findFirst({
+    where: { user: { email }, productId },
+    select: { id: true },
+  });
+
+  if (existingOrder != null) {
+    return {
+      error:
+        "You have already purchased this product. Try downloading it from the My Orders page",
+    };
+  }
+
+  const amount =
+    discountCode == null
+      ? product.priceInCents
+      : getDiscountedAmount(discountCode, product.priceInCents);
+
+  const paymentIntent = await stripe.paymentIntents.create({
+    amount,
+    currency: "USD",
+    metadata: {
+      productId: product.id,
+      discountCodeId: discountCode?.id || null,
+    },
+  });
+
+  if (paymentIntent.client_secret == null) {
+    return {
+      error: "Unknown Error",
+    };
+  }
+
+  return { clientSecret: paymentIntent.client_secret };
 }
